@@ -294,7 +294,10 @@ export class OTel extends TelemetryConnector {
                 const modelId = toolInfo.model;
                 const contextWindow = toolInfo.contextWindow;
 
-                const toolNames = toolInfo.map((tool) => tool.name + '(' + tool.arguments + ')');
+                const toolNames = toolInfo.map((tool) => {
+                    const args = typeof tool.arguments === 'string' ? tool.arguments : JSON.stringify(tool.arguments);
+                    return `${tool.name}(${args})`;
+                });
                 hookContext.curLLMGenSpan.addEvent('llm.gen.tool.calls', {
                     'tool.calls': oTelInstance.redactString(toolNames.join(', ')),
                     'llm.model': modelId || '',
