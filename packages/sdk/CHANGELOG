@@ -5,6 +5,48 @@ All notable changes to the SmythOS SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - Unreleased
+
+### New Feature: Worker Mode
+
+- **`TAgentMode.WORKER`**: agents can now dispatch complex, long-running tasks to background "copy" agents while remaining fully interactive. Simple tasks are answered directly; complex tasks are offloaded automatically.
+
+- **How it works**:
+    - The main agent evaluates every user request and decides whether to answer directly or dispatch to a background worker
+    - Each worker is a copy of the main agent — same skills and model, running in its own independent chat session
+    - Up to **3 workers run concurrently**; additional dispatches are queued and start as slots free up
+    - When a worker finishes, its result is **automatically injected** into the main chat session — no polling needed
+
+- **Worker events** on the `Agent` object for real-time visibility:
+
+    | Event                 | Payload                           | When                                                     |
+    | --------------------- | --------------------------------- | -------------------------------------------------------- |
+    | `WorkerDispatched`    | `{ jobId, task }`                 | Task sent to a background worker                         |
+    | `WorkerCompleted`     | `{ jobId, result }`               | Worker finished successfully                             |
+    | `WorkerFailed`        | `{ jobId, error }`                | Worker encountered an error                              |
+    | `WorkerQuestion`      | `{ jobId, questionId, question }` | Worker needs user clarification                          |
+    | `WorkerAnswered`      | `{ jobId, answer }`               | User's answer relayed to the worker                      |
+    | `WorkerCancelled`     | `{ jobId }`                       | Job cancelled on user request                            |
+    | `WorkerStatusChanged` | `{ jobId, status }`               | Any status transition (fires alongside all events above) |
+
+- **`WorkerJob` interface** exported from `@smythos/sdk` — provides full job lifecycle data: `id`, `task`, `status`, `result`, `error`, `interactions`, `partialResult`, `currentStep`, and `pendingQuestion`
+
+- **Multi-mode support**: `mode` now accepts `TAgentMode | TAgentMode[]` — modes can be combined (e.g. `[TAgentMode.PLANNER, TAgentMode.WORKER]` for a planning agent that also offloads heavy subtasks)
+
+- **`chatCreated` event** emitted on the `Agent` when a new `Chat` session is created — useful for attaching listeners before the first prompt
+
+- **New examples**:
+    - `examples/01-agent-code-skill/04.2-chat-worker-mode.ts` — full CLI chat with Worker mode
+    - `examples/01-agent-code-skill/04.3-chat-planner-worker-combined.ts` — combined Planner + Worker mode
+    - `examples/100-webapp-worker-mode/` — complete Express web application showing real-time worker progress in a browser UI
+
+- **New documentation**:
+    - `packages/sdk/docs/agents/04-worker-mode.md` — full Worker mode reference
+    - `packages/sdk/docs/agents/02-agent-modes.md` — all agent modes overview
+    - Agent documentation restructured into dedicated pages under `docs/agents/`
+
+---
+
 ## [1.5.0] 2026-02-23
 
 ### New Features
