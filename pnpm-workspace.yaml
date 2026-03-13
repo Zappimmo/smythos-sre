@@ -10,6 +10,3 @@ onlyBuiltDependencies:
   - aws-sdk
   - bufferutil
   - esbuild
-
-overrides:
-  list: link:C:/Users/kaddouri/AppData/Local/pnpm/global/5/node_modules/list
